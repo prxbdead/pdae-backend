@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: pdae-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pdae
+      POSTGRES_USER: pdae
+      POSTGRES_PASSWORD: pdae_dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      # Postgres 18 images keep the cluster under /var/lib/postgresql.
+      - pdae-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pdae -d pdae"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pdae-pgdata:

@@ -25,13 +25,44 @@ The HTTP profile listens on <http://localhost:5215>.
 | GET    | `/weatherforecast` | Sample data from the template         |
 | GET    | `/openapi/v1.json` | OpenAPI document (Development only)   |
 
+## Database
+
+PostgreSQL 18 runs through Docker Compose on host port **5433** (leaving a local Postgres on 5432 untouched):
+
+```sh
+docker compose up -d
+```
+
+The development connection string lives in `appsettings.Development.json`:
+
+```
+Host=localhost;Port=5433;Database=pdae;Username=pdae;Password=pdae_dev_password
+```
+
+Override it in any environment with `ConnectionStrings__DefaultConnection`. The API fails fast at startup when no connection string is configured.
+
+### Migrations
+
+EF Core tooling is pinned in `dotnet-tools.json`:
+
+```sh
+dotnet tool restore
+dotnet ef migrations add <Name> --output-dir Data/Migrations
+dotnet ef database update
+```
+
 ## Project layout
 
 ```
 pdae-backend/
 ├── Pdae.slnx                 # Solution (new XML solution format)
 ├── Pdae.Api.csproj           # net10.0 web project
-├── Program.cs                # Minimal API endpoints + CORS
+├── Program.cs                # Minimal API endpoints + CORS + DbContext
+├── Data/
+│   ├── AppDbContext.cs       # EF Core context
+│   └── Migrations/           # Generated migrations
+├── docker-compose.yml        # PostgreSQL 18 for local development
+├── dotnet-tools.json         # Pinned dotnet-ef tool
 ├── Pdae.Api.http             # Ready-to-run HTTP requests
 └── Properties/launchSettings.json
 ```

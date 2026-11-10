@@ -1,7 +1,17 @@
+using Microsoft.EntityFrameworkCore;
+using Pdae.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' is not configured. " +
+        "Set it in appsettings.Development.json or the ConnectionStrings__DefaultConnection environment variable.");
+
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
 // The React Native app calls this API from a native runtime, which does not
 // enforce CORS. This policy keeps browser-based debugging (and future web
