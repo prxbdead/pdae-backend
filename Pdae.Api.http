@@ -1,0 +1,9 @@
+@Pdae.Api_HostAddress = http://localhost:5215
+
+GET {{Pdae.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{Pdae.Api_HostAddress}}/weatherforecast
+Accept: application/json
