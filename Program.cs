@@ -3,29 +3,30 @@ using Pdae.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// OpenAPI konfiguráció
 builder.Services.AddOpenApi();
 
+// PostgreSQL adatbázis kapcsolat
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' is not configured. " +
-        "Set it in appsettings.Development.json or the ConnectionStrings__DefaultConnection environment variable.");
+                       ?? throw new InvalidOperationException(
+                           "Connection string 'DefaultConnection' is not configured. " +
+                           "Set it in appsettings.Development.json or the ConnectionStrings__DefaultConnection environment variable.");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
-// The React Native app calls this API from a native runtime, which does not
-// enforce CORS. This policy keeps browser-based debugging (and future web
-// clients) working during development.
+// CORS konfiguráció
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
         policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
+// OpenAPI csak fejlesztői környezetben
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -37,33 +38,11 @@ else
 
 app.UseCors();
 
-app.MapGet("/health", () => new HealthResponse("ok", DateTimeOffset.UtcNow))
-   .WithName("GetHealth");
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// Health endpoint
+app.MapGet("/health", () =>
+        new HealthResponse("ok", DateTimeOffset.UtcNow))
+    .WithName("GetHealth");
 
 app.Run();
 
 record HealthResponse(string Status, DateTimeOffset Timestamp);
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
