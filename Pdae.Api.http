@@ -2,8 +2,3 @@
 
 GET {{Pdae.Api_HostAddress}}/health
 Accept: application/json
-
-###
-
-GET {{Pdae.Api_HostAddress}}/weatherforecast
-Accept: application/json
