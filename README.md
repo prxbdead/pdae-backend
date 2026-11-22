@@ -91,3 +91,41 @@ The development CORS policy is applied only when the
 application runs in the Development environment.
 
 Production CORS must be configured separately if needed.
+
+
+## Authentication
+
+The backend uses ASP.NET Core Identity with Entity Framework
+Core and PostgreSQL.
+
+### Identity components
+
+- ApplicationUser extends IdentityUser.
+- AppDbContext inherits from IdentityDbContext<ApplicationUser>.
+- Identity services support user management, password hashing,
+  role management, and cookie authentication.
+- Identity database tables are managed through EF Core migrations.
+
+### Database setup
+
+Start PostgreSQL:
+
+```sh
+docker compose up -d
+```
+
+Apply migrations:
+
+```sh
+dotnet tool restore
+dotnet ef database update
+```
+
+### Authentication endpoints
+
+Registration, login, logout, and profile endpoints are
+implemented in subsequent issues.
+
+Cookie authentication requires HTTPS. CSRF protection and
+end-to-end session handling will be completed with the
+authentication endpoints.
