@@ -15,13 +15,19 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// CORS konfiguráció
+// CORS configuration for local development
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin()
+    options.AddPolicy("DevelopmentCors", policy =>
+    {
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
@@ -36,7 +42,10 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseCors();
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("DevelopmentCors");
+}
 
 // Health endpoint
 app.MapGet("/health", () =>

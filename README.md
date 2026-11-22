@@ -80,4 +80,14 @@ pdae-backend/
     └── launchSettings.json
 ```
 
-CORS is open (`AllowAnyOrigin`) for local development so browser-based debugging works. Tighten this before deploying.
+## CORS
+
+CORS is configured for local development using the
+`Cors:AllowedOrigins` setting in `appsettings.Development.json`.
+
+Only explicitly configured origins are allowed.
+
+The development CORS policy is applied only when the
+application runs in the Development environment.
+
+Production CORS must be configured separately if needed.
