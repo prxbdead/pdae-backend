@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Pdae.Api.Models;
 
 namespace Pdae.Api.Data;
 
-/// <summary>
-/// Application database context. Entity sets are added as the domain model grows.
-/// </summary>
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options);
+public class AppDbContext(
+    DbContextOptions<AppDbContext> options
+) : IdentityDbContext<ApplicationUser>(options);
