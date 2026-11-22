@@ -57,17 +57,27 @@ dotnet ef database update
 ## Project layout
 
 ```
+
 pdae-backend/
 ├── Pdae.slnx                 # Solution (new XML solution format)
 ├── Pdae.Api.csproj           # net10.0 web project
 ├── Program.cs                # Health endpoint + CORS + DbContext
+├── Controllers/              # API controllers
+│   └── .gitkeep
+├── Models/                   # Domain entities and data models
+│   └── .gitkeep
+├── DTOs/                     # Data Transfer Objects (requests/responses)
+│   └── .gitkeep
+├── Services/                 # Business logic and application services
+│   └── .gitkeep
 ├── Data/
 │   ├── AppDbContext.cs       # EF Core context
 │   └── Migrations/           # Generated migrations
 ├── docker-compose.yml        # PostgreSQL 18 for local development
 ├── dotnet-tools.json         # Pinned dotnet-ef tool
 ├── Pdae.Api.http             # HTTP endpoint testing
-└── Properties/launchSettings.json
+└── Properties/
+    └── launchSettings.json
 ```
 
 CORS is open (`AllowAnyOrigin`) for local development so browser-based debugging works. Tighten this before deploying.
