@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // OpenAPI configuration
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
 
 // PostgreSQL database configuration
 var connectionString = builder.Configuration
@@ -85,6 +86,7 @@ app.MapGet("/health", () =>
     new HealthResponse("ok", DateTimeOffset.UtcNow))
    .WithName("GetHealth");
 
+app.MapControllers();
 app.Run();
 
 record HealthResponse(string Status, DateTimeOffset Timestamp);
