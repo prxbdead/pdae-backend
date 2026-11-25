@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Pdae.Api.DTOs.Auth;
 using Pdae.Api.DTOs.Users;
 using Pdae.Api.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Pdae.Api.Controllers;
 
@@ -12,11 +14,14 @@ namespace Pdae.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
     public AuthController(
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
     }
 
     [HttpPost("register")]
@@ -150,5 +155,126 @@ public class AuthController : ControllerBase
         );
 
         return Ok(response);
+    }
+    
+    
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest request)
+    {
+        
+        if (!HasExpectedRequestHeader())
+        {
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Forbidden",
+                detail: "Missing required request header.");
+        }
+
+        
+        var email = request.Email?.Trim();
+
+        // 1. Validate required fields
+        if (string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(request.Password))
+        {
+            ModelState.AddModelError(
+                "credentials",
+                "Email and password are required.");
+
+            return ValidationProblem(ModelState);
+        }
+
+        // 2. Find user by email
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Invalid credentials",
+                detail: "Invalid email or password.");
+        }
+
+        // 3. Verify password and create auth cookie
+        var result = await _signInManager.PasswordSignInAsync(
+            user,
+            request.Password,
+            isPersistent: false,
+            lockoutOnFailure: true);
+
+        if (!result.Succeeded)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Invalid credentials",
+                detail: "Invalid email or password.");
+        }
+
+        // 4. Return successful login response
+        return Ok(new
+        {
+            message = "Login successful"
+        });
+    }
+    
+    
+    
+    [AllowAnonymous]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        if (!HasExpectedRequestHeader())
+        {
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Forbidden",
+                detail: "Missing required request header.");
+        }
+
+        await _signInManager.SignOutAsync();
+
+        return NoContent();
+    }
+
+    
+    
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> Me()
+    {
+        var userId = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new
+        {
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            user.CharacterId,
+            user.OnboardingCompleted
+        });
+    }
+    
+    
+    private bool HasExpectedRequestHeader()
+    {
+        return Request.Headers.TryGetValue(
+                   "X-Hodlo-Request",
+                   out var value)
+               && value == "1";
     }
 }
