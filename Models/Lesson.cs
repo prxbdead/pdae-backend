@@ -21,4 +21,7 @@ public class Lesson
 
     public LearningModule LearningModule { get; set; }
         = null!;
+
+    public ICollection<Question> Questions { get; set; }
+        = new List<Question>();
 }
