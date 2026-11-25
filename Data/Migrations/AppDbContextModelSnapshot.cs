@@ -154,6 +154,34 @@ namespace Pdae.Api.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Pdae.Api.Models.AnswerOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("AnswerOptions");
+                });
+
             modelBuilder.Entity("Pdae.Api.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -312,6 +340,50 @@ namespace Pdae.Api.Data.Migrations
                     b.ToTable("Lessons");
                 });
 
+            modelBuilder.Entity("Pdae.Api.Models.Question", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AnswerKey")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ExerciseData")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ExerciseType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Explanation")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Prompt")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("Questions", t =>
+                        {
+                            t.HasCheckConstraint("CK_Questions_ExerciseType", "\"ExerciseType\" IN (\n    'multiple_choice',\n    'true_false',\n    'fill_blank',\n    'match_pairs',\n    'order_steps',\n    'read_chart',\n    'spot_scam',\n    'risk_calculator',\n    'dca_timeline',\n    'story_card'\n)");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -363,6 +435,17 @@ namespace Pdae.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Pdae.Api.Models.AnswerOption", b =>
+                {
+                    b.HasOne("Pdae.Api.Models.Question", "Question")
+                        .WithMany("AnswerOptions")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+                });
+
             modelBuilder.Entity("Pdae.Api.Models.Lesson", b =>
                 {
                     b.HasOne("Pdae.Api.Models.LearningModule", "LearningModule")
@@ -374,9 +457,30 @@ namespace Pdae.Api.Data.Migrations
                     b.Navigation("LearningModule");
                 });
 
+            modelBuilder.Entity("Pdae.Api.Models.Question", b =>
+                {
+                    b.HasOne("Pdae.Api.Models.Lesson", "Lesson")
+                        .WithMany("Questions")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
             modelBuilder.Entity("Pdae.Api.Models.LearningModule", b =>
                 {
                     b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("Pdae.Api.Models.Lesson", b =>
+                {
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("Pdae.Api.Models.Question", b =>
+                {
+                    b.Navigation("AnswerOptions");
                 });
 #pragma warning restore 612, 618
         }

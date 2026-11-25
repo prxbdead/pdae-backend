@@ -58,5 +58,85 @@ public class AppDbContext(
                 l.OrderIndex
             }).IsUnique();
         });
+
+        builder.Entity<Question>(entity =>
+        {
+            entity.HasKey(q => q.Id);
+
+            entity.Property(q => q.Prompt)
+                .IsRequired()
+                .HasMaxLength(2000);
+
+            entity.Property(q => q.Explanation)
+                .HasMaxLength(4000);
+
+            entity.Property(q => q.ExerciseType)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(q => q.ExerciseData)
+                .HasColumnType("jsonb")
+                .IsRequired();
+
+            entity.Property(q => q.AnswerKey)
+                .HasColumnType("jsonb");
+
+            entity.HasOne(q => q.Lesson)
+                .WithMany(l => l.Questions)
+                .HasForeignKey(q => q.LessonId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(q => new
+            {
+                q.LessonId,
+                q.Order
+            }).IsUnique();
+
+            entity.ToTable(table =>
+                table.HasCheckConstraint(
+                    "CK_Questions_ExerciseType",
+                    """
+                    "ExerciseType" IN (
+                        'multiple_choice',
+                        'true_false',
+                        'fill_blank',
+                        'match_pairs',
+                        'order_steps',
+                        'read_chart',
+                        'spot_scam',
+                        'risk_calculator',
+                        'dca_timeline',
+                        'story_card'
+                    )
+                    """
+                )
+            );
+        });
+
+        builder.Entity<AnswerOption>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+
+            entity.Property(a => a.Text)
+                .IsRequired()
+                .HasMaxLength(2000);
+
+            entity.HasOne(a => a.Question)
+                .WithMany(q => q.AnswerOptions)
+                .HasForeignKey(a => a.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(a => new
+            {
+                a.QuestionId,
+                a.Order
+            }).IsUnique();
+        });
     }
+
+    public DbSet<Question> Questions
+        => Set<Question>();
+
+    public DbSet<AnswerOption> AnswerOptions
+        => Set<AnswerOption>();
 }
